@@ -1,4 +1,3 @@
-# pyrefly: ignore [missing-import]
 from data_handler import load_data, save_data
 
 def add_student_data(student_id, name, age, major):
