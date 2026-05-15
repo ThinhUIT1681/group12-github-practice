@@ -1,3 +1,5 @@
+- Hiển thị danh sách sinh viên
+
 # Quản lý sinh viên
 App puthon tkinter giúp quản lý sinh viên.
 

@@ -53,7 +53,7 @@ class StudentManagerGUI:
         
         tk.Button(btn_frame, text="Thêm SV", command=self.add_student, width=12).grid(row=0, column=0, padx=10)
         tk.Button(btn_frame, text="Xóa SV (chọn bảng)", command=self.delete_student, width=15).grid(row=0, column=1, padx=10)
-        tk.Button(btn_frame, text="Hiển thị tất cả", command=self.load_table, width=12).grid(row=0, column=2, padx=10)
+        tk.Button(btn_frame, text="Hiển thị tất cả", command=self.load_table, width=12, bg="yellow").grid(row=0, column=2, padx=10)
         
         tk.Label(btn_frame, text="Tìm kiếm:").grid(row=0, column=3, padx=(20, 5))
         self.ent_search = tk.Entry(btn_frame, width=20)
