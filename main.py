@@ -21,11 +21,17 @@ try:
 except ImportError:
     def delete_student_data(*args): return False, "Chức năng Xóa SV đang được phát triển"
 
+try:
+    from update_student import update_student_data
+except ImportError:
+    def update_student_data(*args): return False, "Chức năng Cập nhật SV đang được phát triển"
+
 class StudentManagerGUI:
     def __init__(self, root):
         self.root = root
         self.root.title("Chương trình Quản lý Sinh viên")
         self.root.geometry("800x500")
+        self.selected_student_id = None
         
         # --- Khung nhập liệu ---
         input_frame = tk.Frame(self.root)
@@ -53,12 +59,13 @@ class StudentManagerGUI:
         
         tk.Button(btn_frame, text="Thêm SV", command=self.add_student, width=12).grid(row=0, column=0, padx=10)
         tk.Button(btn_frame, text="Xóa SV (chọn bảng)", command=self.delete_student, width=15).grid(row=0, column=1, padx=10)
-        tk.Button(btn_frame, text="Hiển thị tất cả", command=self.load_table, width=12, bg="yellow").grid(row=0, column=2, padx=10)
+        tk.Button(btn_frame, text="Sửa/Cập nhật SV", command=self.update_student, width=15).grid(row=0, column=2, padx=10)
+        tk.Button(btn_frame, text="Hiển thị tất cả", command=self.load_table, width=12, bg="yellow").grid(row=0, column=3, padx=10)
         
-        tk.Label(btn_frame, text="Tìm kiếm:").grid(row=0, column=3, padx=(20, 5))
+        tk.Label(btn_frame, text="Tìm kiếm:").grid(row=0, column=4, padx=(20, 5))
         self.ent_search = tk.Entry(btn_frame, width=20)
-        self.ent_search.grid(row=0, column=4, padx=5)
-        tk.Button(btn_frame, text="Tìm", command=self.search_student, width=8).grid(row=0, column=5, padx=5)
+        self.ent_search.grid(row=0, column=5, padx=5)
+        tk.Button(btn_frame, text="Tìm", command=self.search_student, width=8).grid(row=0, column=6, padx=5)
 
         # --- Bảng hiển thị (Treeview) ---
         cols = ("ID", "Name", "Age", "Major")
@@ -74,6 +81,7 @@ class StudentManagerGUI:
         self.tree.column("Major", width=200, anchor=tk.W)
         
         self.tree.pack(fill=tk.BOTH, expand=True, padx=20, pady=10)
+        self.tree.bind("<<TreeviewSelect>>", self.fill_form_from_selection)
         
         # Tải dữ liệu khi mở app
         self.load_table()
@@ -86,7 +94,7 @@ class StudentManagerGUI:
             
         data = get_all_students()
         for s in data:
-            self.tree.insert("", tk.END, values=(s['id'], s['name'], s['age'], s['major']))
+            self.tree.insert("", tk.END, values=(s.get('id', ''), s.get('name', ''), s.get('age', ''), s.get('major', s.get('class', ''))))
 
     def add_student(self):
         """Xử lý sự kiện bấm nút Thêm SV"""
@@ -108,6 +116,49 @@ class StudentManagerGUI:
         else:
             messagebox.showerror("Lỗi", msg)
 
+    def fill_form_from_selection(self, event=None):
+        """Điền thông tin sinh viên đang chọn lên form"""
+        selected = self.tree.selection()
+        if not selected:
+            return
+
+        item = self.tree.item(selected[0])
+        values = item['values']
+        if not values:
+            return
+
+        self.selected_student_id = values[0]
+        self.ent_id.delete(0, tk.END)
+        self.ent_name.delete(0, tk.END)
+        self.ent_age.delete(0, tk.END)
+        self.ent_major.delete(0, tk.END)
+
+        self.ent_id.insert(0, values[0])
+        self.ent_name.insert(0, values[1] if len(values) > 1 else "")
+        self.ent_age.insert(0, values[2] if len(values) > 2 else "")
+        self.ent_major.insert(0, values[3] if len(values) > 3 else "")
+
+    def update_student(self):
+        """Xử lý sự kiện cập nhật SV đang chọn trên bảng"""
+        if not self.selected_student_id:
+            messagebox.showwarning("Cảnh báo", "Vui lòng click chọn một sinh viên trên bảng để cập nhật!")
+            return
+
+        updated_data = {
+            "id": self.ent_id.get(),
+            "name": self.ent_name.get(),
+            "age": self.ent_age.get(),
+            "major": self.ent_major.get()
+        }
+
+        success, msg = update_student_data(self.selected_student_id, updated_data)
+        if success:
+            messagebox.showinfo("Thành công", msg)
+            self.selected_student_id = updated_data["id"].strip() or self.selected_student_id
+            self.load_table()
+        else:
+            messagebox.showerror("Lỗi", msg)
+
     def delete_student(self):
         """Xử lý sự kiện xóa SV đang chọn trên bảng"""
         selected = self.tree.selection()
@@ -124,6 +175,7 @@ class StudentManagerGUI:
             if success:
                 messagebox.showinfo("Thành công", msg)
                 self.load_table()
+                self.selected_student_id = None
             else:
                 messagebox.showerror("Lỗi", msg)
 
@@ -142,7 +194,7 @@ class StudentManagerGUI:
             
         # Hiển thị kết quả tìm kiếm
         for s in results:
-            self.tree.insert("", tk.END, values=(s['id'], s['name'], s['age'], s['major']))
+            self.tree.insert("", tk.END, values=(s.get('id', ''), s.get('name', ''), s.get('age', ''), s.get('major', s.get('class', ''))))
 
 if __name__ == "__main__":
     root = tk.Tk()
