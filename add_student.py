@@ -1,9 +1,15 @@
 from data_handler import load_data, save_data
+from validate_student import validate_student_data
 
 def add_student_data(student_id, name, age, major):
     student_id = student_id.strip()
-    if not student_id:
-        return False, "Mã sinh viên không được để trống!"
+    is_valid, msg = validate_student_data({
+        "id": student_id,
+        "name": name,
+        "age": age
+    }, require_all=True)
+    if not is_valid:
+        return False, msg
         
     data = load_data()
     for student in data:
